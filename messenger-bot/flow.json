@@ -1,0 +1,152 @@
+{
+  "start": "menu",
+  "keywords": [
+    { "match": ["asesor", "persona humana", "hablar con alguien", "humano"], "next": "captura_nombre" },
+    { "match": ["precio", "costo", "cuanto cuesta", "cuánto cuesta"], "next": "precio_info" },
+    { "match": ["queja", "no funciona", "mal servicio"], "next": "queja_info" },
+    { "match": ["modalidad 40"], "next": "mejorar_patron" },
+    { "match": ["ley 73", "ley 97"], "next": "pension_edad" },
+    { "match": ["infonavit", "vivienda"], "next": "vivienda_menu" }
+  ],
+  "nodes": {
+    "menu": {
+      "text": "¡Hola! 👋 Soy el asistente de Asesores Previsionales MX. Te ayudo a entender tu situación con el IMSS en menos de 2 minutos. Todo lo que te comparto aquí es orientación informativa — el trámite oficial siempre se hace directamente ante el IMSS.\n\n¿Qué te gustaría saber hoy?",
+      "quick_replies": [
+        { "title": "Quiero pensionarme", "payload": "pension_edad" },
+        { "title": "Mejorar mi pensión", "payload": "mejorar_patron" },
+        { "title": "Beneficios médicos", "payload": "salud_menu" },
+        { "title": "Vivienda / Infonavit", "payload": "vivienda_menu" }
+      ]
+    },
+
+    "pension_edad": {
+      "text": "Perfecto. Para orientarte mejor: ¿ya cumpliste o estás cerca de cumplir 60 años?",
+      "quick_replies": [
+        { "title": "Sí, ya los tengo o casi", "payload": "pension_semanas" },
+        { "title": "No, todavía falta tiempo", "payload": "mejorar_patron" },
+        { "title": "No estoy seguro/a", "payload": "pension_semanas" }
+      ]
+    },
+    "pension_semanas": {
+      "text": "Hay dos rutas principales: Ley 73 (si empezaste a cotizar antes de julio de 1997) o Ley 97 (si empezaste después). ¿Sabes aproximadamente cuántas semanas tienes cotizadas?",
+      "quick_replies": [
+        { "title": "Sí, ya las sé", "payload": "captura_semanas" },
+        { "title": "No, no las sé", "payload": "no_sabe_semanas" }
+      ]
+    },
+    "captura_semanas": {
+      "text": "Perfecto, escríbeme el número aproximado de semanas (puedes poner un estimado).",
+      "capture_field": "semanas_cotizadas",
+      "next": "captura_nombre"
+    },
+    "no_sabe_semanas": {
+      "text": "No hay problema, eso lo puedes consultar gratis en la app IMSS Digital o en gob.mx/imss. Un asesor también te puede ayudar a interpretarlo. ¿Quieres que te contactemos?",
+      "quick_replies": [
+        { "title": "Sí, quiero que me contacten", "payload": "captura_nombre" },
+        { "title": "Todavía no, gracias", "payload": "cierre_suave" }
+      ]
+    },
+
+    "mejorar_patron": {
+      "text": "Existen estrategias legales para mejorar el monto de tu pensión, la más común es Modalidad 40. ¿Actualmente sigues cotizando con un patrón?",
+      "quick_replies": [
+        { "title": "Sí, tengo patrón", "payload": "mejorar_a" },
+        { "title": "No, ya no cotizo", "payload": "mejorar_b" },
+        { "title": "Soy independiente", "payload": "mejorar_c" }
+      ]
+    },
+    "mejorar_a": {
+      "text": "Entendido. Aun así podemos revisar si conviene ajustar tu estrategia antes de dejar de cotizar, para que llegues en mejor posición.",
+      "auto_next": "captura_nombre"
+    },
+    "mejorar_b": {
+      "text": "Ese es justo el caso típico de Modalidad 40. Un asesor puede calcular contigo el costo mensual aproximado y el beneficio esperado.",
+      "auto_next": "captura_nombre"
+    },
+    "mejorar_c": {
+      "text": "Como trabajador independiente también existen opciones de aseguramiento voluntario ante el IMSS. Conviene revisar tu caso específico.",
+      "auto_next": "captura_nombre"
+    },
+
+    "salud_menu": {
+      "text": "Te cuento rápido: el aseguramiento ante el IMSS cubre consultas, medicamentos, estudios, hospitalización, urgencias, embarazo y guardería, entre otros. ¿Tu duda es sobre...?",
+      "quick_replies": [
+        { "title": "Cómo afiliarme yo", "payload": "salud_a" },
+        { "title": "Incluir a mi familia", "payload": "salud_b" },
+        { "title": "Qué cubre exactamente", "payload": "salud_c" }
+      ]
+    },
+    "salud_a": {
+      "text": "La vía depende de tu situación: con patrón, como independiente (aseguramiento voluntario), o por continuación voluntaria. Un asesor te dice cuál aplica y el costo real.",
+      "auto_next": "captura_nombre"
+    },
+    "salud_b": {
+      "text": "Cónyuge, hijos dependientes y padres pueden ser beneficiarios bajo ciertas condiciones. Te confirmamos los requisitos exactos en la llamada.",
+      "auto_next": "captura_nombre"
+    },
+    "salud_c": {
+      "text": "La cobertura exacta depende de tu tipo de aseguramiento. Con gusto te la detallamos según tu caso.",
+      "auto_next": "captura_nombre"
+    },
+
+    "vivienda_menu": {
+      "text": "Sobre Infonavit: el crédito se genera con tus aportaciones patronales acumuladas. Es un sistema distinto al aseguramiento médico, aunque relacionado. ¿Qué te gustaría saber?",
+      "quick_replies": [
+        { "title": "Cuánto llevo acumulado", "payload": "vivienda_a" },
+        { "title": "Si califico para crédito", "payload": "vivienda_b" },
+        { "title": "Otra duda", "payload": "captura_nombre" }
+      ]
+    },
+    "vivienda_a": {
+      "text": "Eso lo puedes consultar gratis en 'Mi Cuenta Infonavit' (app o portal). Si quieres, un asesor te ayuda a interpretar tu saldo y opciones.",
+      "auto_next": "captura_nombre"
+    },
+    "vivienda_b": {
+      "text": "La precalificación depende de tu historial de aportaciones y puntos acumulados. Te ayudamos a revisarlo en la consulta.",
+      "auto_next": "captura_nombre"
+    },
+
+    "precio_info": {
+      "text": "El diagnóstico inicial no tiene costo. Si decides continuar con acompañamiento en algún trámite, el asesor te explica el costo exacto según tu caso en la llamada.",
+      "auto_next": "captura_nombre"
+    },
+    "queja_info": {
+      "text": "Lamento la mala experiencia 🙏 Un responsable te va a contactar directamente lo antes posible.",
+      "end": true,
+      "notify": true
+    },
+
+    "captura_nombre": {
+      "text": "Para conectarte con un asesor humano, ¿me confirmas tu nombre completo? (La primera consulta es orientativa y sin costo)",
+      "capture_field": "nombre_completo",
+      "next": "captura_ciudad"
+    },
+    "captura_ciudad": {
+      "text": "¿En qué ciudad vives?",
+      "capture_field": "ciudad",
+      "next": "captura_horario"
+    },
+    "captura_horario": {
+      "text": "¿Mejor horario para llamarte?",
+      "quick_replies": [
+        { "title": "Mañana", "payload": "confirmacion::horario_preferido::Mañana" },
+        { "title": "Tarde", "payload": "confirmacion::horario_preferido::Tarde" },
+        { "title": "Noche", "payload": "confirmacion::horario_preferido::Noche" }
+      ]
+    },
+    "confirmacion": {
+      "text": "¡Listo! 🙌 Ya tengo tus datos. Un asesor de Asesores Previsionales MX te va a contactar por este mismo Messenger en un lapso de 24 a 48 horas.\n\nRecuerda: esta consulta es orientativa. Cualquier trámite oficial ante el IMSS se realiza directamente ante el IMSS — nosotros te acompañamos y explicamos el proceso.",
+      "end": true,
+      "notify": true
+    },
+
+    "cierre_suave": {
+      "text": "Sin problema. Aquí me quedo por si más adelante tienes dudas. Cuando quieras retomar, solo escríbeme 'quiero pensionarme', 'mejorar mi pensión', 'beneficios médicos' o 'vivienda'. 😊",
+      "end": true
+    },
+
+    "fallback": {
+      "text": "No entendí bien 🤔 Puedes elegir una opción del menú anterior, o escribir 'asesor' para hablar directamente con alguien de nuestro equipo."
+    }
+  }
+}
