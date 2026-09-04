@@ -126,6 +126,10 @@ app.post("/manychat-brain", (req, res) => {
     state.data[field] = (incomingText || "").trim();
     state.awaitingCapture = null;
     targetNode = next;
+  } else if (!state.node) {
+    // Primera vez que este usuario escribe, sin importar qué haya puesto
+    // (podría ser "hola", "buenas", "quiero información", etc.)
+    targetNode = flow.start;
   } else if (incomingText) {
     // Texto libre sin estar esperando captura: revisamos palabras clave
     targetNode = matchKeyword(incomingText) || null;
