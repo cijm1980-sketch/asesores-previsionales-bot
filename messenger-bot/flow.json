@@ -40,7 +40,7 @@
       "next": "captura_nombre"
     },
     "no_sabe_semanas": {
-      "text": "No hay problema, eso lo puedes consultar gratis en la app IMSS Digital o en gob.mx/imss. Un asesor también te puede ayudar a interpretarlo. ¿Quieres que te contactemos?",
+      "text": "No hay problema, eso lo puedes consultar gratis y en 2 minutos en la app IMSS Digital o en gob.mx/imss (con tu CURP y contraseña). Cuando hables con tu asesor, si ya tienes esa consulta hecha, con gusto la revisan juntos — así te doy una orientación mucho más precisa. ¿Quieres que te contactemos?",
       "quick_replies": [
         { "title": "Sí, quiero que me contacten", "payload": "captura_nombre" },
         { "title": "Todavía no, gracias", "payload": "cierre_suave" }
@@ -135,7 +135,7 @@
       ]
     },
     "confirmacion": {
-      "text": "¡Listo! 🙌 Ya tengo tus datos. Un asesor de Asesores Previsionales MX te va a contactar por este mismo Messenger en un lapso de 24 a 48 horas.\n\nRecuerda: esta consulta es orientativa. Cualquier trámite oficial ante el IMSS se realiza directamente ante el IMSS — nosotros te acompañamos y explicamos el proceso.",
+      "text": "¡Listo, {{nombre_completo}}! 🙌 Ya tengo tus datos. Un asesor de Asesores Previsionales MX que conoce bien la zona de {{ciudad}} te va a contactar por este mismo Messenger en un lapso de 24 a 48 horas, en horario de {{horario_preferido}}.\n\nRecuerda: esta consulta es orientativa. Cualquier trámite oficial ante el IMSS se realiza directamente ante el IMSS — nosotros te acompañamos y explicamos el proceso.",
       "end": true,
       "notify": true
     },
