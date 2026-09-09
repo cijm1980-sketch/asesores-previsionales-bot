@@ -9,10 +9,10 @@
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
-
+const calculadora = require("./ruta-calculadora");
 const app = express();
 app.use(express.json());
-
+app.use("/calculadora", calculadora);
 const PORT = process.env.PORT || 3000;
 // URL pública de ESTE servidor una vez desplegado, ej: https://tu-app.onrender.com/manychat-brain
 const BRAIN_URL = process.env.BRAIN_URL || `http://localhost:${PORT}/manychat-brain`;
