@@ -153,6 +153,25 @@ router.post('/estimar', (req, res) => {
     salario_promedio,
   } = req.body;
 
+  // Guardia: si la ley no quedo definida como 73 o 97, no se puede estimar.
+  // Cubre el caso 'ambiguo' (registro en 1997) y cualquier valor vacio o raro.
+  const ley = String(ley_aplicable || '').trim();
+  if (ley !== '73' && ley !== '97') {
+    return res.json(
+      respuesta(
+        [
+          texto(
+            '📋 Tu caso necesita revisión personalizada\n\n' +
+              'No puedo darte una estimación automática porque falta definir ' +
+              'qué ley te aplica.\n\n' +
+              'Un asesor lo revisa contigo sin costo y te da el número correcto.'
+          ),
+        ],
+        [accionTag('revision_manual'), accionTag('lead_calificado')]
+      )
+    );
+  }
+
   const edad = limpiarNumero(edad_actual);
   const semanas = limpiarNumero(semanas_cotizadas);
 
@@ -173,7 +192,7 @@ router.post('/estimar', (req, res) => {
   }
 
   // ---------------- LEY 97 ----------------
-  if (String(ley_aplicable) === '97') {
+  if (ley === '97') {
     const d = diagnosticarLey97(semanas, edad, new Date().getFullYear());
     const acciones = [
       accionTag('lead_calificado'),
