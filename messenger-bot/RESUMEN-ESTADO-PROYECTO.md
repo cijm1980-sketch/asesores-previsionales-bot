@@ -197,6 +197,35 @@ cambios (ver detalle abajo); los resultados están dentro del rango esperado.
   decidir si el bot debe preguntar la zona y cuándo usar ese salario mínimo en
   vez del general.
 
+### Nota de precaución: reingreso y modificación de salario en Modalidad 40
+Al investigar (11-sep-2026) si había cambios confirmados a Modalidad 40 para 2026,
+encontramos mucho contenido de baja calidad en internet (varios artículos de
+"ambito.com" repiten el mismo titular con un mes distinto cada vez —marzo, abril,
+junio, julio— sin citar ningún decreto ni boletín oficial). Separamos lo verificable
+de lo que no:
+
+**Confirmado oficialmente** (Boletín 272 del IMSS, 2-jun-2025,
+[gob.mx/imss/prensa](https://www.gob.mx/imss/prensa/implementa-imss-mecanismo-de-supervision-para-garantizar-atencion-transparente-y-eficiente-a-personas-aseguradas-en-modalidad-40)):
+supervisión bimestral de las Jefaturas de Afiliación y Cobranza sobre reingresos,
+salarios registrados y semanas cotizadas, más un nuevo mecanismo de pago vía HSBC.
+Los requisitos de fondo NO cambiaron (52 semanas en los últimos 5 años, sin
+aseguramiento vigente como trabajador, tope de 25 UMAs) — coincide con lo que ya
+tiene programado `calculo-pension.js`.
+
+**Sin confirmar oficialmente pero relevante para la asesoría en vivo:** una nota
+(aforeyfinanzas.com, sin cita a documento del IMSS) afirma que desde el 4 de
+septiembre el IMSS aplica un criterio más estricto sobre una práctica común:
+inscribirse en M40 con un salario bajo para después subirlo. Según esa nota, el
+derecho de reingreso (Art. 220 LSS) se mantiene, pero un reingreso YA NO
+garantizaría automáticamente el derecho a modificar el salario de cotización.
+
+**Acción recomendada:** antes de que un asesor le diga a un lead que puede
+inscribirse con salario bajo y subirlo más adelante vía reingreso, debe confirmarlo
+directamente con el IMSS (o con el contador/actuario del equipo) — no dar ese
+consejo solo con base en artículos de prensa no oficiales. No se modificó la lógica
+de `simularModalidad40` ni el mensaje del bot por este punto, ya que el escenario
+que simula (salario más alto sostenido, no un truco de reingreso) no se ve afectado.
+
 ### Comerciales
 - Google Business Profile (no iniciado)
 - Distribución orgánica en grupos de Facebook
