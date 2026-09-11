@@ -1,0 +1,236 @@
+# Asesores Previsionales MX — Estado del proyecto
+
+**Última actualización:** 11 de septiembre de 2026
+
+---
+
+## 1. Infraestructura en producción
+
+| Componente | Estado | Detalle |
+|---|---|---|
+| Servidor Node.js | ✅ Live | Render, plan gratuito, **deploy manual** |
+| Repositorio | ✅ | `cijm1980-sketch/asesores-previsionales-bot`, rama `main` |
+| URL base | ✅ | `https://asesores-previsionales-bot.onrender.com` |
+| Monitoreo | ✅ | UptimeRobot evita que el free tier se duerma |
+| ManyChat | ✅ Pro | Solicitudes externas habilitadas |
+| Canal | ✅ | Messenger (Facebook Page) |
+
+**Último commit desplegado:** `3c58966` — "Arreglar caso ambiguo en calculadora"
+
+---
+
+## 2. Archivos del proyecto
+
+```
+messenger-bot/
+├── server-manychat.js      # Servidor principal (bot conversacional)
+├── flow.json               # Contenido del chatbot general
+├── calculo-pension.js      # Lógica de cálculo Ley 73 / diagnóstico Ley 97
+├── ruta-calculadora.js     # Endpoints de la calculadora
+├── flujo-manychat.md       # Guía de armado del flujo en ManyChat
+└── package.json
+```
+
+**Conexión en `server-manychat.js`:**
+```js
+const calculadora = require('./ruta-calculadora');
+app.use('/calculadora', calculadora);
+```
+
+---
+
+## 3. Calculadora de pensión
+
+### Endpoints
+
+| Ruta | Método | Función |
+|---|---|---|
+| `/calculadora/ping` | GET | Verificar que el módulo cargó |
+| `/calculadora/ley` | POST | Determina Ley 73, 97 o ambiguo |
+| `/calculadora/estimar` | POST | Estimación (73) o diagnóstico (97) |
+| `/calculadora/modalidad40` | POST | Gancho comercial de Modalidad 40 |
+
+### Valores de configuración (CONFIG en `calculo-pension.js`)
+
+| Variable | Valor 2026 | Fuente | Actualizar |
+|---|---|---|---|
+| `UMA_DIARIA` | 117.31 | INEGI, vigente 1-feb-2026 | Cada febrero |
+| `SALARIO_MINIMO_DIARIO` | 315.04 | CONASAMI, vigente 1-ene-2026 | Cada enero |
+| `FACTOR_INCREMENTO_2001` | 1.11 | Decreto 2001 | Verificar |
+| `TOPE_UMAS` | 25 | Tope legal Ley 73 | Fijo |
+
+### Lógica de negocio
+
+**Bifurcación por año de primer registro al IMSS:**
+- Antes de 1997 → **Ley 73** (3 preguntas: edad, semanas, salario)
+- Después de 1997 → **Ley 97** (2 preguntas: edad, semanas)
+- Exactamente 1997 → **ambiguo**, se detiene y pide revisión manual
+
+**Ley 73:** cálculo real con tabla del Artículo 167 LSS 1973 (cuantía básica +
+incrementos por semanas excedentes a 500), factor por edad de retiro (Art. 171:
+60 años = 75%, hasta 65 años = 100%), tope de 25 UMAs y pensión mínima
+garantizada. Devuelve un rango ±12%.
+
+**Ley 97:** no devuelve monto (depende del saldo de Afore). Solo diagnostica si
+cumple el mínimo de semanas del año en curso (875 en 2026, sube 25 cada año
+hasta 1,000 en 2031).
+
+---
+
+## 4. Configuración en ManyChat
+
+### Campos de usuario (carpeta `calculadoraIMSS`)
+
+Todos tipo **Texto**, para tolerar entradas informales:
+
+`anio_registro_imss`, `ley_aplicable`, `edad_actual`, `semanas_cotizadas`,
+`salario_promedio`, `pension_estimada`, `whatsapp_contacto`
+
+### Tags
+
+| Tag | Cuándo se aplica |
+|---|---|
+| `lead_calificado` | Completó la calculadora |
+| `lead_prioritario` | Cumple requisitos, listo para asesoría |
+| `lead_exploratorio` | Le faltan semanas o datos |
+| `ley_73` / `ley_97` | Segmentación por régimen |
+| `interes_modalidad40` | Vio el gancho de M40 |
+| `revision_manual` | Caso ambiguo (1997) |
+| `contacto_capturado` | Aceptó la revisión |
+
+Los tags los aplica **el servidor** vía `actions`, no el flujo visual.
+
+### Estructura del flujo
+
+```
+Disparador: calcular / calculadora / cuanto / cuánto / pension / pensión / estimar
+  ↓
+mensajeBienvenida [botón Empezar]
+  ↓
+mensajeAlta (pregunta año) → guarda anio_registro_imss
+  ↓
+servicioAlta → POST /calculadora/ley
+  ↓
+condicionAmbiguo97 (ley_aplicable es ambiguo)
+  ├─ Sí → mensaje revisión + tag revision_manual [FIN]
+  └─ No ↓
+condicion73 (ley_aplicable es 73)
+  ├─ Sí → mensajeEdad73 → Semanas73 → mensajeSalario
+  └─ No → mensajeEdad97 → mensajeSemanas97
+              ↓ (ambas convergen)
+mensajeCalcula → POST /calculadora/estimar
+  ↓
+condicionM40 (ley_aplicable es 73)
+  ├─ Sí → mensajeM40 → POST /calculadora/modalidad40
+  └─ No ↓
+mensajeRevision [2 botones]
+  ├─ "Sí, revisión" → mensajeCaptura → tag contacto_capturado
+  └─ "No, curiosidad" → mensajeCierre
+```
+
+### Lecciones aprendidas del armado
+
+1. **Las solicitudes externas deben ir en un paso de tipo Messenger**, no dentro
+   de un bloque "Realizar acciones". El bloque de acciones solo soporta mapeo de
+   respuesta y descarta los mensajes del servidor.
+2. **Encadenar por "Siguiente paso"**, no por "Acción en respuesta". Si ambas
+   salidas están conectadas, el flujo avanza sin esperar la respuesta del servidor.
+3. **"Mapeo de respuesta" se deja vacío.** El servidor devuelve formato nativo
+   `{"version":"v2","content":{...}}` y ManyChat lo interpreta automáticamente.
+4. **La vista previa no ejecuta solicitudes externas.** Muestra "Dynamic block
+   can't be previewed" — hay que probar en Messenger real.
+5. **Los campos se insertan con el botón `{+}`**, no escribiéndolos a mano.
+   ManyChat los convierte a IDs internos (`cuf_XXXXXXX`).
+
+---
+
+## 5. Validación en producción
+
+| Caso | Entrada | Resultado | Estado |
+|---|---|---|---|
+| Ley 73 | 1985 / 64 / 1500 / 25000 | $14,007 — $17,827 + gancho 95% | ✅ (validado antes del fix de factor 30.4) |
+| Ley 97 | 2010 / 45 / 600 | Faltan 275 semanas (de 875) | ✅ |
+| Ambiguo | 1997 | Mensaje de revisión, se detiene | ✅ |
+| Modalidad 40 | — | 200 OK, aplica tag | ✅ |
+
+**Re-validado el 11-sep-2026 tras las correcciones técnicas (sección 6), con los
+mismos casos, simulando las rutas con Node directamente (sin desplegar aún):**
+
+| Caso | Entrada | Resultado | Estado |
+|---|---|---|---|
+| Ley 73 | 1985 / 64 / 1500 / 25000 | $13,823 — $17,592 (antes $14,007—$17,827; baja ~1.3% por el factor 30.4, correcto) | ✅ |
+| Ley 97 | 2010 / 45 / 600 | Faltan 275 semanas (de 875) — sin cambio | ✅ |
+| Ambiguo | 1997 | Mensaje de revisión, se detiene — sin cambio | ✅ |
+| Piso de pensión mínima | salario 20000 / 500 semanas / edad 60 | $10,631/mes (antes $9,451; el piso ya incluye el Factor Fox) | ✅ |
+| Modalidad 40 | 1500 sem / $25,000 / edad 64 | Tope de salario M40 ahora usa UMA 117.31 (antes 113.14 hardcodeado) | ✅ |
+
+**Pendiente:** hacer un despliegue real a Render y probar en Messenger antes de
+dar por cerrado (por ahora solo se probó la lógica con Node, no end-to-end).
+
+---
+
+## 6. Cambios recientes (11-sep-2026)
+
+Correcciones técnicas aplicadas en `calculo-pension.js` y `ruta-calculadora.js`:
+
+| Cambio | Antes | Ahora | Impacto |
+|---|---|---|---|
+| Factor días/mes | `/30` fijo | `CONFIG.DIAS_POR_MES = 30.4` (365÷12) | Pensión Ley 73 baja ~1.3% (más precisa) |
+| Piso de pensión mínima garantizada | `SALARIO_MINIMO_DIARIO * 30` (sin Factor Fox) | `SALARIO_MINIMO_DIARIO * 30.4 * FACTOR_INCREMENTO_2001` | El piso subía ~11% menos de lo real. Con valores 2026: pasó de $9,451 a ~$10,631/mes (cifra oficial publicada: $10,636.54) |
+| UMA en tope de Modalidad 40 | Hardcodeado `113.14` (desactualizado) | `CONFIG.UMA_DIARIA` (117.31, vigente) | El tope de salario M40 usaba un UMA de un año anterior |
+
+**Verificado con investigación (11-sep-2026):**
+- `UMA_DIARIA` (117.31) y `SALARIO_MINIMO_DIARIO` (315.04) vigentes para 2026: correctos, confirmados con INEGI/CONASAMI.
+- `FACTOR_INCREMENTO_2001` (1.11): correcto. Es el "Factor Fox", decreto presidencial del 20/dic/2001. Se aplica tanto a la pensión calculada como al piso de pensión mínima garantizada (esto último NO se estaba haciendo — ver tabla arriba).
+- Se agregó `SALARIO_MINIMO_DIARIO_ZLFN` (440.87) a `CONFIG` como referencia para la Zona Libre de la Frontera Norte, pero **no está conectado al flujo** — el bot no pregunta la zona del usuario. Solo es relevante si se decide atender activamente esa zona.
+
+Todos los casos de validación de la sección 5 se volvieron a correr con estos
+cambios (ver detalle abajo); los resultados están dentro del rango esperado.
+
+## 7. Pendientes
+
+### Técnicos
+- **Simulación de Modalidad 40:** el modelo pondera el salario nuevo contra las
+  últimas 250 semanas. Es aproximado; no presentar como número exacto (ya se
+  redacta así en el mensaje al usuario).
+- **Zona Libre de la Frontera Norte:** el valor ya está en `CONFIG`, pero falta
+  decidir si el bot debe preguntar la zona y cuándo usar ese salario mínimo en
+  vez del general.
+
+### Comerciales
+- Google Business Profile (no iniciado)
+- Distribución orgánica en grupos de Facebook
+- Versión web de la calculadora (indexable en Google, tráfico orgánico)
+- Replicar contenido a Instagram
+
+---
+
+## 8. Contenido producido
+
+- Carrusel "4 cambios importantes en tu pensión 2026" (5 slides, publicado)
+- Reel vertical del mismo tema, 13.4s, CTA visible desde el segundo 0
+  (corrige el problema de retención detectado: de 1.8k vistas, solo 210
+  llegaban a 3 segundos y ninguna al minuto)
+
+**Temas cubiertos:** reducción de edad ISSSTE (56 mujeres / 58 hombres),
+incremento de semanas IMSS (+25 anuales hacia 1,000 en 2031), fallo SCJN sobre
+concubinas, Fondo de Pensiones para el Bienestar.
+
+---
+
+## 9. Comandos frecuentes
+
+```bash
+# Subir cambios
+git add .
+git commit -m "descripcion"
+git push
+
+# Si el remoto tiene cambios (ej. edición desde GitHub web)
+git pull    # en Vim: Esc, :wq, Enter
+git push
+```
+
+**Deploy:** Render → servicio → Manual Deploy → Deploy latest commit
+
+**Verificar:** `https://asesores-previsionales-bot.onrender.com/calculadora/ping`

@@ -12,18 +12,28 @@
 // ---------------------------------------------------------------------------
 
 const CONFIG = {
-  // UMA diaria vigente. ACTUALIZAR cada febrero.
-  // El valor de abajo es un placeholder: ponlo con el dato oficial del INEGI.
+  // UMA diaria vigente desde el 1-feb-2026 (INEGI). ACTUALIZAR cada febrero.
   UMA_DIARIA: 117.31,
 
-  // Salario minimo general diario vigente. ACTUALIZAR cada enero.
+  // Salario minimo general diario vigente desde el 1-ene-2026 (CONASAMI). ACTUALIZAR cada enero.
   SALARIO_MINIMO_DIARIO: 315.04,
 
-  // Factor de incremento decretado en 2001 (Art. 25 transitorio / decreto 2001)
+  // Salario minimo diario de la Zona Libre de la Frontera Norte (CONASAMI, vigente 1-ene-2026).
+  // No esta conectado al flujo todavia: el bot no pregunta la zona del usuario.
+  // Si en algun momento se atiende activamente esa zona, usar este valor en vez de
+  // SALARIO_MINIMO_DIARIO para esos casos (afecta el piso de pension minima garantizada).
+  SALARIO_MINIMO_DIARIO_ZLFN: 440.87,
+
+  // Factor de incremento decretado el 20/dic/2001 ("Factor Fox"). Confirmado: 1.11 (11%).
+  // Se aplica tanto a la pension calculada como al piso de pension minima garantizada.
   FACTOR_INCREMENTO_2001: 1.11,
 
   // Tope de salario promedio para Ley 73: 25 UMAs
   TOPE_UMAS: 25,
+
+  // Dias promedio por mes (365/12). Usar SIEMPRE este factor para pasar de salario
+  // mensual a diario y viceversa (no 30 fijo, que subestima ~1.3%).
+  DIAS_POR_MES: 30.4,
 };
 
 // ---------------------------------------------------------------------------
@@ -110,7 +120,7 @@ function calcularLey73(salarioPromedioMensual, semanasCotizadas, edadRetiro) {
   if (errores.length) return { ok: false, errores };
 
   // 1. Salario diario promedio
-  const salarioDiario = salarioPromedioMensual / 30;
+  const salarioDiario = salarioPromedioMensual / CONFIG.DIAS_POR_MES;
 
   // 2. Expresarlo en veces UMA, aplicando tope de 25 UMAs
   let vecesUMA = salarioDiario / CONFIG.UMA_DIARIA;
@@ -144,7 +154,12 @@ function calcularLey73(salarioPromedioMensual, semanasCotizadas, edadRetiro) {
   let pensionMensual = pensionMensualVejez * factorEdad;
 
   // 9. Pisos y topes legales
-  const pensionMinima = CONFIG.SALARIO_MINIMO_DIARIO * 30;
+  // La pension minima garantizada tambien lleva el Factor Fox (1.11), no solo el
+  // salario minimo elevado a mensual. Sin el factor se subestimaba el piso ~11%.
+  // Formula: salario minimo diario x 30.4 x 1.11 => ~$10,631/mes con valores 2026
+  // (cifra oficial publicada por fuentes especializadas: $10,636.54/mes).
+  const pensionMinima =
+    CONFIG.SALARIO_MINIMO_DIARIO * CONFIG.DIAS_POR_MES * CONFIG.FACTOR_INCREMENTO_2001;
   const topeMaximo = salarioPromedioMensual; // no puede exceder el 100% del salario promedio
   let ajuste = null;
 

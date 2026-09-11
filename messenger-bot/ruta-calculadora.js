@@ -14,6 +14,7 @@ const express = require('express');
 const router = express.Router();
 
 const {
+  CONFIG,
   calcularLey73,
   simularModalidad40,
   diagnosticarLey97,
@@ -324,8 +325,13 @@ router.post('/modalidad40', (req, res) => {
 
   const edadRetiro = edad >= 60 ? Math.min(Math.floor(edad), 65) : 65;
 
-  // Escenario: cotizar 5 años en M40 al triple del salario actual
-  const salarioM40 = Math.min(salario * 3, 113.14 * 25 * 30);
+  // Escenario: cotizar 5 años en M40 al triple del salario actual, topado a 25 UMAs
+  // (antes usaba un UMA hardcodeado y desactualizado de 113.14; ahora toma el valor
+  // vigente de CONFIG y el mismo factor de 30.4 dias/mes que calculo-pension.js).
+  const salarioM40 = Math.min(
+    salario * 3,
+    CONFIG.UMA_DIARIA * CONFIG.TOPE_UMAS * CONFIG.DIAS_POR_MES
+  );
   const sim = simularModalidad40(
     { salarioPromedioMensual: salario, semanasCotizadas: semanas },
     salarioM40,
