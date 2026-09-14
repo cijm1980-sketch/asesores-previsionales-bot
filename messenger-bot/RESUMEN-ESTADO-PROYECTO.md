@@ -1,6 +1,6 @@
 # Asesores Previsionales MX — Estado del proyecto
 
-**Última actualización:** 11 de septiembre de 2026
+**Última actualización:** 14 de septiembre de 2026
 
 ---
 
@@ -15,7 +15,7 @@
 | ManyChat | ✅ Pro | Solicitudes externas habilitadas |
 | Canal | ✅ | Messenger (Facebook Page) |
 
-**Último commit desplegado:** `3c58966` — "Arreglar caso ambiguo en calculadora"
+**Último commit desplegado:** `dd00242` — "Agregar nota de precaucion sobre reingreso/modificacion de salario en Modalidad 40" (deploy manual confirmado en Render, live)
 
 ---
 
@@ -226,6 +226,21 @@ consejo solo con base en artículos de prensa no oficiales. No se modificó la l
 de `simularModalidad40` ni el mensaje del bot por este punto, ya que el escenario
 que simula (salario más alto sostenido, no un truco de reingreso) no se ve afectado.
 
+**Actualización (14-sep-2026):** se revisó un artículo más de ambito.com con el
+mismo patrón ("IMSS confirma cambios en Modalidad 40... octubre 2026"). Confirmamos
+que es el mismo reciclaje de titular (ya van mayo, junio, julio y ahora octubre) sin
+fuente oficial citada, y el propio texto admite que los "cambios" ya aplican desde
+enero de 2026 — no hay nada nuevo. Sí se verificó un dato real mencionado ahí: la
+cuota mensual de Modalidad 40 para 2026 es **14.438% del salario registrado**
+(Art. 218 LSS), parte de un incremento gradual ya programado desde la reforma de
+2020 al seguro de Invalidez, Vejez, Cesantía y Muerte (~1.09 puntos porcentuales
+por año; sube a 15.528% en 2027). Es dato correcto pero no es una noticia de
+octubre — es el mismo % vigente desde enero. No requiere ningún cambio de código:
+el bot no cotiza el costo mensual de M40, solo compara la pensión resultante.
+**Recomendación:** seguir sin usar ambito.com como fuente para contenido o
+asesoría — el patrón de titulares reciclados con fecha cambiada resta credibilidad
+si un lead lo detecta.
+
 ### Comerciales
 - Google Business Profile (no iniciado)
 - Distribución orgánica en grupos de Facebook
@@ -240,10 +255,18 @@ que simula (salario más alto sostenido, no un truco de reingreso) no se ve afec
 - Reel vertical del mismo tema, 13.4s, CTA visible desde el segundo 0
   (corrige el problema de retención detectado: de 1.8k vistas, solo 210
   llegaban a 3 segundos y ninguna al minuto)
+- Video corto "¿Sabes cuánto vas a recibir de pensión?" (13-sep-2026, listo para
+  publicar, aún no publicado): 5 tarjetas verticales 1080x1920 con el mismo estilo
+  de marca (azul marino/dorado), gancho visible desde el segundo 0, sin cifras de
+  pensión (para no restar valor a la calculadora), CTA final "Escríbenos
+  'CALCULAR'" — coincide con las palabras clave ya programadas en el bot. Falta
+  agregarle música/voz en edición (se entregó sin audio) y subir el copy de
+  publicación sugerido.
 
 **Temas cubiertos:** reducción de edad ISSSTE (56 mujeres / 58 hombres),
 incremento de semanas IMSS (+25 anuales hacia 1,000 en 2031), fallo SCJN sobre
-concubinas, Fondo de Pensiones para el Bienestar.
+concubinas, Fondo de Pensiones para el Bienestar, y la importancia de saber el
+monto estimado de tu pensión (nuevo video).
 
 ---
 
