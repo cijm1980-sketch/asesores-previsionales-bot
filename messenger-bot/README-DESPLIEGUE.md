@@ -18,8 +18,14 @@ Infraestructura actual:
 - Dominio: `asesoresprevisionales.com` (DNS gestionado en Hetzner DNS Console)
 - HTTPS: certificado Let's Encrypt vía `certbot --nginx`, renovación automática
 - Reverse proxy: nginx, escucha en 80/443 y redirige a `localhost:3000`
-- Proceso: `pm2` (nombre del proceso: `asesores-bot`), configurado con
-  `pm2 startup` para levantar solo si el servidor reinicia
+- Proceso: `pm2`, arrancado desde `ecosystem.config.js` (nombre del proceso:
+  `asesores-bot`), configurado con `pm2 startup` para levantar solo si el
+  servidor reinicia
+- Variable de entorno `BRAIN_URL`: definida en `ecosystem.config.js`, apunta a
+  `https://asesoresprevisionales.com/manychat-brain`. **Es obligatoria** — sin
+  ella, los botones de respuesta rápida ("quick replies") del bot traen una
+  URL interna (`localhost`) que ManyChat no puede alcanzar, y la conversación
+  se rompe después del primer mensaje.
 - Repositorio: clonado en `/opt/apps/asesores-previsionales-bot` vía SSH con
   una **deploy key** dedicada (`~/.ssh/deploy_asesores_bot` en el servidor)
 
@@ -31,7 +37,7 @@ cd /opt/apps
 GIT_SSH_COMMAND="ssh -i ~/.ssh/deploy_asesores_bot" git clone git@github.com:cijm1980-sketch/asesores-previsionales-bot.git
 cd asesores-previsionales-bot/messenger-bot
 npm install
-pm2 start server-manychat.js --name asesores-bot
+pm2 start ecosystem.config.js
 pm2 save
 ```
 
@@ -53,6 +59,7 @@ si solo cambiaste `flow.json` o algún `.js`, puedes saltarlo.
 ```bash
 curl https://asesoresprevisionales.com/calculadora/ping
 pm2 status
+pm2 env 0
 pm2 logs asesores-bot --lines 50
 ```
 
