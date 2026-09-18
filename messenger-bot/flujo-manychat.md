@@ -57,7 +57,7 @@ Disparadores de palabra clave: `calcular`, `calculadora`, `cuanto`, `pension`,
 **Después:** Bloque External Request
 
 - Método: `POST`
-- URL: `https://asesores-previsionales-bot.onrender.com/calculadora/ley`
+- URL: `https://asesoresprevisionales.com/calculadora/ley`
 - Body (JSON):
 ```json
 { "anio_registro_imss": "{{anio_registro_imss}}" }
@@ -118,7 +118,7 @@ Disparadores de palabra clave: `calcular`, `calculadora`, `cuanto`, `pension`,
 ### Paso 3 — Resultado (External Request)
 
 - Método: `POST`
-- URL: `https://asesores-previsionales-bot.onrender.com/calculadora/estimar`
+- URL: `https://asesoresprevisionales.com/calculadora/estimar`
 - Body:
 ```json
 {
@@ -139,7 +139,7 @@ El servidor devuelve el resultado y aplica los tags automáticamente.
 *(Solo si `ley_aplicable` = 73)*
 
 - Método: `POST`
-- URL: `https://asesores-previsionales-bot.onrender.com/calculadora/modalidad40`
+- URL: `https://asesoresprevisionales.com/calculadora/modalidad40`
 - Body:
 ```json
 {

@@ -8,9 +8,9 @@
 
 | Componente | Estado | Detalle |
 |---|---|---|
-| Servidor Node.js | ✅ Live | Render, plan gratuito, **deploy manual** |
+| Servidor Node.js | ✅ Live | Hetzner VPS, pm2 + nginx + HTTPS |
 | Repositorio | ✅ | `cijm1980-sketch/asesores-previsionales-bot`, rama `main` |
-| URL base | ✅ | `https://asesores-previsionales-bot.onrender.com` |
+| URL base | ✅ | `https://asesoresprevisionales.com` |
 | Monitoreo | ✅ | UptimeRobot evita que el free tier se duerma |
 | ManyChat | ✅ Pro | Solicitudes externas habilitadas |
 | Canal | ✅ | Messenger (Facebook Page) |
@@ -283,6 +283,6 @@ git pull    # en Vim: Esc, :wq, Enter
 git push
 ```
 
-**Deploy:** Render → servicio → Manual Deploy → Deploy latest commit
+**Deploy:** SSH al servidor → `git pull` → `npm install` (si aplica) → `pm2 restart asesores-bot`
 
-**Verificar:** `https://asesores-previsionales-bot.onrender.com/calculadora/ping`
+**Verificar:** `https://asesoresprevisionales.com/calculadora/ping`

@@ -5,35 +5,61 @@ constructor visual de ManyChat. En ManyChat solo vas a crear **un bloque**
 ("External Request"); todo lo demás (menús, ramas, captura de datos, palabras
 clave) vive en el archivo `flow.json`, que puedes editar sin tocar código.
 
-Ya probé toda la lógica en este entorno y funciona correctamente (menú →
-ramas → captura de texto libre → confirmación, y también las palabras clave
-como "modalidad 40" o "asesor"). Lo que falta es desplegarlo en un lugar con
-URL pública, y conectar ManyChat a esa URL.
+Toda la lógica está probada y funcionando correctamente (menú → ramas →
+captura de texto libre → confirmación, y también las palabras clave como
+"modalidad 40" o "asesor"). El servidor está desplegado en un VPS propio
+(Hetzner), no en Render.
 
-## 1. Desplegar el servidor (Render.com, gratis)
+## 1. Desplegar el servidor (VPS propio en Hetzner)
 
-1. Crea una cuenta gratis en https://render.com (puedes entrar con GitHub).
-2. Sube esta carpeta (`server-manychat.js`, `flow.json`, `package.json`) a un
-   repositorio nuevo en GitHub. Si no usas Git normalmente, la forma más
-   simple es: crea un repo vacío en github.com > "uploading an existing
-   file" > arrastra los 3 archivos.
-3. En Render: **New > Web Service** > conecta ese repositorio.
-4. Configuración del servicio:
-   - **Runtime**: Node
-   - **Build Command**: `npm install`
-   - **Start Command**: `node server-manychat.js`
-   - **Plan**: Free
-5. En "Environment Variables" agrega:
-   - `BRAIN_URL` = `https://TU-SERVICIO.onrender.com/manychat-brain`
-     (usa el dominio que Render te asigna; lo ves después del primer deploy,
-     y luego regresas aquí a completar esta variable y vuelves a desplegar)
-6. Dale "Create Web Service". En unos minutos vas a tener una URL como:
-   `https://asesores-previsionales-bot.onrender.com`
+Infraestructura actual:
 
-Nota: el plan gratis de Render "duerme" el servicio si no recibe tráfico por
-un rato, y tarda unos segundos en despertar en el siguiente mensaje. Para un
-volumen bajo de conversaciones (como en la semana de lanzamiento) esto no es
-un problema real, solo un pequeño retraso ocasional en la primera respuesta.
+- Servidor: Hetzner, Ubuntu 24.04, hostname `vps-principal`, IP `62.238.35.1`
+- Dominio: `asesoresprevisionales.com` (DNS gestionado en Hetzner DNS Console)
+- HTTPS: certificado Let's Encrypt vía `certbot --nginx`, renovación automática
+- Reverse proxy: nginx, escucha en 80/443 y redirige a `localhost:3000`
+- Proceso: `pm2` (nombre del proceso: `asesores-bot`), configurado con
+  `pm2 startup` para levantar solo si el servidor reinicia
+- Repositorio: clonado en `/opt/apps/asesores-previsionales-bot` vía SSH con
+  una **deploy key** dedicada (`~/.ssh/deploy_asesores_bot` en el servidor)
+
+**Primer despliegue (ya hecho):**
+
+```bash
+mkdir -p /opt/apps
+cd /opt/apps
+GIT_SSH_COMMAND="ssh -i ~/.ssh/deploy_asesores_bot" git clone git@github.com:cijm1980-sketch/asesores-previsionales-bot.git
+cd asesores-previsionales-bot/messenger-bot
+npm install
+pm2 start server-manychat.js --name asesores-bot
+pm2 save
+```
+
+**Para desplegar cambios nuevos** (en vez de "Manual Deploy" en Render), conéctate
+por SSH al servidor y corre:
+
+```bash
+cd /opt/apps/asesores-previsionales-bot/messenger-bot
+git pull
+npm install
+pm2 restart asesores-bot
+```
+
+`npm install` solo hace falta si `package.json` cambió (nuevas dependencias);
+si solo cambiaste `flow.json` o algún `.js`, puedes saltarlo.
+
+**Verificar que quedó bien:**
+
+```bash
+curl https://asesoresprevisionales.com/calculadora/ping
+pm2 status
+pm2 logs asesores-bot --lines 50
+```
+
+No hay tiempos de "despertar" como en el plan gratis de Render — el VPS corre
+24/7 sin dormirse, así que ya no se necesita UptimeRobot para mantenerlo
+despierto (aunque puede seguir siendo útil como monitor externo de
+disponibilidad).
 
 ## 2. Configurar el bloque en ManyChat
 
@@ -42,15 +68,15 @@ un problema real, solo un pequeño retraso ocasional en la primera respuesta.
    la sección de acciones/lógica).
 2. Configúralo así:
    - **Method**: POST
-   - **URL**: `https://TU-SERVICIO.onrender.com/manychat-brain`
+   - **URL**: `https://asesoresprevisionales.com/manychat-brain`
    - **Body** (tipo JSON), usando los "merge tags" que ManyChat te ofrece al
      escribir `{{`:
-     ```json
+```json
      {
        "user_id": "{{user_id}}",
        "text": "{{last_input_text}}"
      }
-     ```
+```
      (El nombre exacto de estos tags puede variar un poco según la versión
      de ManyChat — busca en el selector de tags algo como "User ID" /
      "Subscriber ID" y "Last Text Input" / "Last User Message".)
@@ -83,8 +109,9 @@ al probar ves un error o los botones no continúan la conversación:
 
 Todo el contenido de la conversación está en `flow.json`. Para cambiar un
 mensaje, agregar una rama nueva, o ajustar una palabra clave, edita ese
-archivo y vuelve a desplegar en Render (o activa "Auto-Deploy" desde GitHub
-para que se actualice solo con cada cambio que subas).
+archivo, súbelo a GitHub (`git add`, `git commit`, `git push`) y despliega
+el cambio en el servidor con `git pull` + `pm2 restart asesores-bot` (ver
+sección 1).
 
 Estructura de un nodo:
 
