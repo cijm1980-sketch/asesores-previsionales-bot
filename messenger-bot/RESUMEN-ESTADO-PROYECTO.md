@@ -1,6 +1,6 @@
 # Asesores Previsionales MX — Estado del proyecto
 
-**Última actualización:** 14 de septiembre de 2026
+**Última actualización:** 20 de septiembre de 2026
 
 ---
 
@@ -11,11 +11,11 @@
 | Servidor Node.js | ✅ Live | Hetzner VPS, pm2 + nginx + HTTPS |
 | Repositorio | ✅ | `cijm1980-sketch/asesores-previsionales-bot`, rama `main` |
 | URL base | ✅ | `https://asesoresprevisionales.com` |
-| Monitoreo | ✅ | UptimeRobot evita que el free tier se duerma |
+| Monitoreo | ✅ | UptimeRobot (alertas de caída; ya no es necesario para evitar que se duerma — pm2 en VPS propio corre 24/7) |
 | ManyChat | ✅ Pro | Solicitudes externas habilitadas |
 | Canal | ✅ | Messenger (Facebook Page) |
 
-**Último commit desplegado:** `dd00242` — "Agregar nota de precaucion sobre reingreso/modificacion de salario en Modalidad 40" (deploy manual confirmado en Render, live)
+**Último commit desplegado:** `4d5c2d7` — "Documentar ecosystem.config.js y variable BRAIN_URL para despliegue en VPS" (en producción en Hetzner vía pm2 + Nginx + Let's Encrypt; verificado 20-sep-2026 con `/calculadora/ping` respondiendo en vivo en `https://asesoresprevisionales.com`)
 
 ---
 
@@ -164,8 +164,10 @@ mismos casos, simulando las rutas con Node directamente (sin desplegar aún):**
 | Piso de pensión mínima | salario 20000 / 500 semanas / edad 60 | $10,631/mes (antes $9,451; el piso ya incluye el Factor Fox) | ✅ |
 | Modalidad 40 | 1500 sem / $25,000 / edad 64 | Tope de salario M40 ahora usa UMA 117.31 (antes 113.14 hardcodeado) | ✅ |
 
-**Pendiente:** hacer un despliegue real a Render y probar en Messenger antes de
-dar por cerrado (por ahora solo se probó la lógica con Node, no end-to-end).
+**Confirmado (20-sep-2026):** despliegue real completado — no en Render, sino en el VPS
+de Hetzner (ver migración en sección 6). Verificado end-to-end: `/calculadora/ping`
+responde en `https://asesoresprevisionales.com`, ManyChat ya apunta a ese dominio en
+los bloques de solicitud externa, y el proceso corre con pm2 sin caídas reportadas.
 
 ---
 
@@ -186,6 +188,44 @@ Correcciones técnicas aplicadas en `calculo-pension.js` y `ruta-calculadora.js`
 
 Todos los casos de validación de la sección 5 se volvieron a correr con estos
 cambios (ver detalle abajo); los resultados están dentro del rango esperado.
+
+## 6.1 Migración de infraestructura: Render → Hetzner VPS (17/18-sep-2026)
+
+- Servidor movido de Render (plan gratuito) a un VPS propio de Hetzner
+  (`vps-principal`, Ubuntu 24.04, CX23).
+- Repo clonado en `/opt/apps/asesores-previsionales-bot` usando una deploy key
+  SSH dedicada (`~/.ssh/deploy_asesores_bot`), no las credenciales personales.
+- Proceso gestionado con **pm2** (nombre `asesores-bot`), con `pm2 save` +
+  `pm2 startup` configurados para que arranque solo si el VPS se reinicia.
+- **Nginx** como reverse proxy + certificado **HTTPS de Let's Encrypt** para
+  el dominio propio `asesoresprevisionales.com` (ya no se depende del
+  subdominio `.onrender.com`).
+- Los bloques "External Request" en ManyChat ya apuntan al nuevo dominio.
+- **Verificado en vivo el 20-sep-2026:** `/calculadora/ping` responde
+  correctamente en `https://asesoresprevisionales.com`, y el código
+  desplegado coincide exactamente con el commit más reciente de `main`
+  (incluye las tres correcciones técnicas del 11-sep: factor 30.4, Factor
+  Fox en el piso mínimo, y UMA vigente en Modalidad 40).
+- **Pendiente de decidir:** si Render se apaga/pausa o se conserva un tiempo
+  como respaldo.
+
+## 6.2 Verificación de cumplimiento: NSS (19-sep-2026)
+
+Carlos Iván planteó la duda de si el bot pide el NSS (dato personal, riesgo
+de incumplimiento). Se revisó el código completo:
+
+- `flow.json` no tiene ningún campo ni pregunta que capture el NSS.
+- El mensaje de bienvenida de la calculadora ya lo aclara explícitamente:
+  *"No te pido tu NSS ni ningún dato sensible."*
+- Las únicas menciones de datos oficiales del IMSS son sobre el **CURP**, y
+  solo como referencia para que el usuario consulte sus propias semanas en
+  la app IMSS Digital — el bot no lo pide ni lo guarda.
+- El commit histórico `3112724` ("...sugerencia de captura NSS") fue
+  revisado: a pesar del título, nunca implementó captura de NSS.
+- **Conclusión:** no hay nada que corregir en el código sobre este punto.
+  Se ofreció redactar un aviso de privacidad simplificado para los otros
+  datos que sí se capturan (nombre, WhatsApp, ciudad, salario), pero Carlos
+  Iván decidió no hacerlo por ahora — tema cerrado.
 
 ## 7. Pendientes
 
