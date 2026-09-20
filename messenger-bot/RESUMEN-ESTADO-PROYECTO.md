@@ -206,8 +206,8 @@ cambios (ver detalle abajo); los resultados están dentro del rango esperado.
   desplegado coincide exactamente con el commit más reciente de `main`
   (incluye las tres correcciones técnicas del 11-sep: factor 30.4, Factor
   Fox en el piso mínimo, y UMA vigente en Modalidad 40).
-- **Pendiente de decidir:** si Render se apaga/pausa o se conserva un tiempo
-  como respaldo.
+- **Decidido (20-sep-2026):** Render fue apagado. Hetzner es ahora la única
+  infraestructura en producción para este proyecto.
 
 ## 6.2 Verificación de cumplimiento: NSS (19-sep-2026)
 
